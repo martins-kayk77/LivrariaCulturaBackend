@@ -11,6 +11,8 @@ const allowedOrigins = process.env.FRONTEND_URL
       .map((item) => normalizeOrigin(item))
       .filter(Boolean)
   : [];
+const isAllowedVercelPreview = (origin) =>
+  origin?.endsWith(".vercel.app");
 
 server.use(express.json());
 server.use(cors({
@@ -21,7 +23,11 @@ server.use(cors({
 
     const normalizedOrigin = normalizeOrigin(origin);
 
-    if (allowedOrigins.length === 0 || allowedOrigins.includes(normalizedOrigin)) {
+    if (
+      allowedOrigins.length === 0 ||
+      allowedOrigins.includes(normalizedOrigin) ||
+      isAllowedVercelPreview(normalizedOrigin)
+    ) {
       return callback(null, true);
     }
 
