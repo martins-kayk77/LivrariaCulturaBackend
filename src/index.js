@@ -5,13 +5,28 @@ import cors from 'cors';
 
 const port = process.env.PORT || 3333;
 const server = express();
+const normalizeOrigin = (value) => value?.trim().replace(/\/+$/, "");
 const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(",").map((item) => item.trim())
-  : true;
+  ? process.env.FRONTEND_URL.split(",")
+      .map((item) => normalizeOrigin(item))
+      .filter(Boolean)
+  : [];
 
 server.use(express.json());
 server.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const normalizedOrigin = normalizeOrigin(origin);
+
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Origin not allowed by CORS"));
+  },
 }));
 
 server.get("/health", (request, response) => {
